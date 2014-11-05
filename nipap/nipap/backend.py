@@ -1471,7 +1471,10 @@ class Nipap:
                         po.used_addresses_v4,
                         po.used_addresses_v6,
                         po.free_addresses_v4,
-                        po.free_addresses_v6
+                        po.free_addresses_v6,
+                        '' as vrf_id,
+                        '' as vrf_rt,
+                        '' as vrf_name
                     FROM ip_net_pool AS po"""
         params = list()
 
@@ -1512,9 +1515,6 @@ class Nipap:
                 p = dict(row)
                 res[index] = dict(res[index].items() + p.items())
             # Make sure that prefixes is a list, even if there are no prefixes
-            for r in ['vrf_id', 'vrf_rt', 'vrf_name']:
-                if r not in res[index]:
-                    res[index][r] = None 
             if res[index]['prefixes'] is None:
                 res[index]['prefixes'] = []
         return res
