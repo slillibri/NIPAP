@@ -1471,14 +1471,8 @@ class Nipap:
                         po.used_addresses_v4,
                         po.used_addresses_v6,
                         po.free_addresses_v4,
-                        po.free_addresses_v6,
-                        vrf.id AS vrf_id,
-                        vrf.rt AS vrf_rt,
-                        vrf.name AS vrf_name,
-                        (SELECT array_agg(prefix::text) FROM (SELECT prefix FROM ip_net_plan WHERE pool_id=po.id ORDER BY prefix) AS a) AS prefixes
-                FROM ip_net_pool AS po
-                LEFT OUTER JOIN ip_net_plan AS inp ON (inp.pool_id = po.id)
-                LEFT OUTER JOIN ip_net_vrf AS vrf ON (vrf.id = inp.vrf_id)"""
+                        po.free_addresses_v6
+                    FROM ip_net_pool AS po"""
         params = list()
 
         # expand spec
@@ -1493,12 +1487,34 @@ class Nipap:
         res = list()
         for row in self._curs_pg:
             p = dict(row)
-
-            # Make sure that prefixes is a list, even if there are no prefixes
-            if p['prefixes'] == None:
-                p['prefixes'] = []
             res.append(p)
 
+        ## try loading prefixes and VRF info seperately
+        for index in range(len(res)):
+            ## load prefixes for pool
+            sql = """SELECT array_agg(prefix::text)  AS prefixes
+                FROM ip_net_plan AS inp
+                WHERE inp.pool_id = {}""".format(res[index]['id'])
+            self._execute(sql)
+            for row in self._curs_pg:
+                p = dict(row)
+                res[index] = dict(res[index].items() + p.items())
+            sql = """SELECT
+                        vrf.id AS vrf_id,
+                        vrf.rt AS vrf_rt,
+                        vrf.name AS vrf_name
+                FROM ip_net_plan AS inp,
+                     ip_net_vrf AS vrf
+                WHERE inp.pool_id = {}
+                  AND vrf.id = inp.vrf_id""".format(res[index]['id'])
+            self._execute(sql)
+            for row in self._curs_pg:
+                p = dict(row)
+                res[index] = dict(res[index].items() + p.items())
+            # Make sure that prefixes is a list, even if there are no prefixes
+
+            if res[index]['prefixes'] is None:
+                res[index]['prefixes'] = []
         return res
 
 
