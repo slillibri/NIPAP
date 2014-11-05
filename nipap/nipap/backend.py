@@ -1512,7 +1512,9 @@ class Nipap:
                 p = dict(row)
                 res[index] = dict(res[index].items() + p.items())
             # Make sure that prefixes is a list, even if there are no prefixes
-
+            for r in ['vrf_id', 'vrf_rt', 'vrf_name']:
+                if r not in res[index]:
+                    res[index][r] = None 
             if res[index]['prefixes'] is None:
                 res[index]['prefixes'] = []
         return res
@@ -2227,7 +2229,7 @@ class Nipap:
         allowed_attr = [
             'authoritative_source', 'prefix', 'description',
             'comment', 'pool_id', 'tags', 'node', 'type', 'country',
-            'order_id', 'customer_id', 'vrf_id', 'alarm_priority', 
+            'order_id', 'customer_id', 'vrf_id', 'alarm_priority',
             'monitor', 'external_key', 'vlan']
         self._check_attr(attr, req_attr, allowed_attr)
         if ('description' not in attr) and ('node' not in attr):
@@ -2330,7 +2332,7 @@ class Nipap:
         allowed_attr = [
             'authoritative_source', 'prefix', 'description',
             'comment', 'pool_id', 'tags', 'node', 'type', 'country',
-            'order_id', 'customer_id', 'vrf_id', 'alarm_priority', 
+            'order_id', 'customer_id', 'vrf_id', 'alarm_priority',
             'monitor', 'external_key', 'vlan' ]
 
         self._check_attr(attr, [], allowed_attr)
